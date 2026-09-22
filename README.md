@@ -1,18 +1,52 @@
 # zk_robot_ros
 
-ROS 2 integration workspace for robot simulation, perception, and control.
+ROS 2 机器人仿真、感知和抓取集成工作区。
 
-## Goals
+本仓库当前先建立 ROS 2 集成层的文档与接口基线，目标是把已有的 Gazebo 仿真、
+机器人运动/CAN 控制和控制台逐步接起来，完成棋子识别、定位、抓取和放置的闭环。
 
-- Control the robot through ROS 2.
-- Develop and validate grasping workflows in Gazebo.
-- Integrate the existing CAN driver and robot control code.
-- Connect the head and wrist camera streams to perception and manipulation nodes.
+## 当前范围
 
-## Related projects
+- 使用 ROS 2 组织相机、TF、感知、规划和执行节点。
+- 在 Gazebo 中验证棋盘和棋子的抓取流程。
+- 复用已有的 SocketCAN/CAN 控制实现，但保持仿真协议和真机协议边界清晰。
+- 为头部相机、腕部相机、机械臂和夹爪建立稳定的 ROS 2 接口。
 
-- `gazebo_bot`: Gazebo simulation, robot models, camera sensors, and virtual CAN integration.
-- `zk_robot`: Existing C++ robot and CAN driver implementation.
-- `robot_station`: Robot control user interface.
+当前仓库还没有可直接运行的 ROS 2 package；已有仿真和真机代码仍在相关仓库中。
+先把接口和环境写清楚，可以避免后续把仿真的默认参数误当成真机标定值。
 
-Machine-specific access notes belong in the local `AGENT.md` file and are intentionally excluded from Git.
+## 文档
+
+- [开发环境与棋子抓取](docs/开发环境与棋子抓取.md)：Jetson/ROS 2/Gazebo 基线、棋盘坐标、相机话题和分阶段抓取流程。
+- [接口协议与安全边界](docs/接口协议与安全边界.md)：ROS 2、Gazebo、仿真 vCAN、TI5 真机 CAN、灵巧手和控制台协议的分层关系。
+
+## 相关项目
+
+- `gazebo_bot`：Gazebo Sim 场景、TIAGo++/T170C 模型、RGB-D 相机、棋盘棋子和仿真 vCAN。
+- `zk_robot`：C++ SocketCAN、TIAGo/TI5 运动控制、真实本体 CAN 和傲意灵巧手适配。
+- `robot_station`：Web 控制台、机器人 TCP 网关和 ZRCP/1 控制协议。
+
+这三个项目可以独立构建；本仓库负责把它们接入 ROS 2，不复制整套底层实现。
+
+## 环境快速检查
+
+目标开发环境为 Ubuntu 22.04 / aarch64 Jetson，具体版本和检查方式见环境文档。典型
+ROS 2 命令如下：
+
+```bash
+source /opt/ros/humble/setup.bash
+ros2 doctor --report
+gz sim --versions
+```
+
+仿真阶段只使用 `vcan*`，不要把验证脚本、演示程序或故障测试指向真实 `can0`。
+仓库不保存 SSH 地址、端口、密钥路径、令牌或其他机器私密信息；这些信息应通过
+本机私有配置或密码管理器提供。
+
+## 后续实现顺序
+
+1. 建立 ROS 2 package、消息/动作接口和 `ros_gz_bridge` 传感器桥接。
+2. 接入棋盘/棋子检测，输出带时间戳和坐标系的 `PoseStamped`。
+3. 用 TF2 将目标转换到机器人基座坐标，并加入碰撞、限位和可达性检查。
+4. 接入 MoveIt/控制器和夹爪动作，完成接近、闭合、抬升、移动、放置和释放。
+5. 在 vCAN 和 Gazebo 中完成看门狗、停止、反馈新鲜度和失败恢复验收，再考虑真机。

@@ -1,5 +1,7 @@
 # Local agent and machine configuration
 AGENT.md
+AGENT.local.md
+LOCAL_ENV.md
 .env
 .env.*
 
