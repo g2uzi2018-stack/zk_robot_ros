@@ -1,0 +1,25 @@
+# Local agent and machine configuration
+AGENT.md
+.env
+.env.*
+
+# ROS 2 / colcon outputs
+build/
+install/
+log/
+.colcon/
+
+# Editor and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Python caches
+__pycache__/
+*.py[cod]
+
+# Native build outputs
+CMakeFiles/
+CMakeCache.txt
+compile_commands.json
